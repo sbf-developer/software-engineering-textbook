@@ -1,0 +1,112 @@
+\chapter{Engineering as a way of reasoning}
+
+\section{The object of the discipline}
+Programming is the act of expressing a computation. \term{Software engineering}
+adds a harder question: how can that computation remain correct, understandable,
+secure, and economically maintainable while its environment changes? The
+environment includes users, regulations, dependencies, hardware, networks,
+other teams, and the people who will inherit the code without the original
+author's memory.
+
+The word \emph{engineering} is useful because it points to constrained design.
+An engineer makes assumptions explicit, models important failure modes, chooses
+materials and boundaries, measures the result, and manages uncertainty. Software
+has unusual properties: it is easy to copy, cheap to modify in one place, and
+often difficult to observe as a whole. A change that looks local can alter
+security, latency, data interpretation, or the behaviour of a distant client.
+
+\begin{keyidea}
+Quality is not a single attribute. It is the degree to which a system satisfies
+the requirements that matter in its context, including requirements about
+change, operation, safety, privacy, and future understanding.
+\end{keyidea}
+
+\section{Claims, evidence, and recommendations}
+Technical writing often mixes three kinds of statement. A specification defines
+what an implementation must do. Empirical research reports observations under
+specified conditions. Professional practice is accumulated experience that may
+be useful without being a universal law. A recommendation is a judgment about a
+particular context. Keeping these categories separate prevents cargo cults.
+
+For example, HTTP semantics are defined by an IETF standard; the assertion that
+an HTTP method is safe or idempotent is a protocol claim that can be checked
+against that standard \cite{ietf2022http}. The belief that small pull requests
+are easier to review is a practice hypothesis: often plausible, but dependent
+on change shape, reviewer skill, and system complexity. The decision to use a
+modular monolith for a small product is an engineering recommendation whose
+strength comes from the constraints, not from the label.
+
+\section{A system boundary is a decision}
+Every system description has a boundary. Inside it are behaviours the team can
+change directly; outside it are actors, services, devices, laws, and physical
+conditions. A boundary is never purely technical. It encodes ownership and
+responsibility.
+
+The Ledgerline boundary is deliberately modest:
+
+\begin{itemize}
+  \item a caller submits an order containing a customer identifier and line items;
+  \item the service validates domain invariants and returns a stable order identifier;
+  \item a relational store records the accepted state;
+  \item operators can tell whether the service is alive, useful, and overloaded;
+  \item a failure does not silently create a second order when the caller retries.
+\end{itemize}
+
+The last point is not an implementation detail. It is a business property that
+leads to an idempotency key, a database constraint, a response contract, and a
+recovery test. Engineering begins when a vague concern becomes a checkable
+property.
+
+\section{The feedback loop}
+Good development is a loop rather than a waterfall of documents:
+
+\begin{center}
+\begin{tikzpicture}[node distance=6mm,>=Latex,font=\small]
+  \node[draw,rounded corners,fill=codebg,minimum width=22mm,minimum height=8mm] (need) {need};
+  \node[draw,rounded corners,fill=codebg,minimum width=22mm,minimum height=8mm,right=of need] (model) {model};
+  \node[draw,rounded corners,fill=codebg,minimum width=22mm,minimum height=8mm,right=of model] (build) {build};
+  \node[draw,rounded corners,fill=codebg,minimum width=22mm,minimum height=8mm,right=of build] (observe) {observe};
+  \draw[->,thick,accent] (need) -- (model);
+  \draw[->,thick,accent] (model) -- (build);
+  \draw[->,thick,accent] (build) -- (observe);
+  \draw[->,thick,accent] (observe) to[bend left=35] (need);
+\end{tikzpicture}
+\end{center}
+
+The model may be a test, a state machine, a schema, a sequence diagram, or a
+small written invariant. The point is not to predict every detail. It is to
+make the important assumptions cheap to challenge before they become expensive
+code or production incidents.
+
+\section{A practical quality model}
+Before choosing tools, ask which of these dimensions are material:
+
+\noindent\begin{tabularx}{\textwidth}{@{}p{0.22\textwidth}X@{}}
+\toprule
+Dimension & Question to answer \\
+\midrule
+Correctness & Does the system produce the required result for valid and invalid inputs? \\
+Safety and security & What must never happen, and who might deliberately cause it? \\
+Reliability & What happens when dependencies, data, or operators behave unexpectedly? \\
+Operability & Can a responsible person detect, diagnose, and recover from failure? \\
+Changeability & Can a team modify one concern without guessing about unrelated consequences? \\
+Human fit & Can people with different abilities, languages, roles, and incentives use and govern it? \\
+\bottomrule
+\end{tabularx}
+
+These dimensions compete. Stronger durability may cost latency; a highly generic
+API may be harder to understand; a fast migration may increase rollback risk.
+The engineering response is not to maximize every quality. It is to state the
+trade-off and make the consequence visible.
+
+\begin{exercise}
+Write five falsifiable properties for a service that accepts payments. For each,
+name the boundary at which it is measured and one test or observation that could
+show it is false.
+\end{exercise}
+
+\section{Chapter summary}
+Software engineering is disciplined reasoning under constraints. Begin with
+properties rather than technologies, distinguish standards from evidence and
+recommendations, draw a deliberate system boundary, and use short feedback
+loops to turn assumptions into tests and observations.

@@ -1,0 +1,89 @@
+\chapter{CI/CD, containers, cloud systems, and infrastructure as code}
+
+\section{Delivery is a controlled experiment}
+Continuous integration (CI) makes changes build and test together. Continuous
+delivery keeps a releasable artifact available; continuous deployment may
+automatically release it after required checks. These are related practices, not
+synonyms. The useful question is how quickly and safely the team can move from a
+reviewed change to an observable, reversible production state.
+
+A pipeline should answer:
+
+\begin{enumerate}
+  \item What exact source revision produced this artifact?
+  \item Which tests, analyses, and security checks ran?
+  \item Which configuration is injected at deployment rather than baked into the artifact?
+  \item How is the artifact promoted, observed, rolled back, or rolled forward?
+  \item Who or what is authorized to perform each transition?
+\end{enumerate}
+
+\section{Build once, configure at runtime}
+Build a versioned artifact once and promote that artifact through environments.
+Rebuilding separately for staging and production can produce different bytes and
+invalidate test evidence. Configuration such as endpoints and feature flags may
+vary; code and dependencies should not silently vary.
+
+Pin dependencies and base images to a reviewed policy. “Latest” is convenient
+for a tutorial and dangerous for reproducibility. Updates still need to happen;
+the point is to make them explicit and observable.
+
+\section{Containers}
+A container packages a process and its user-space dependencies while sharing the
+host kernel. It is not a complete security boundary by itself. Use a minimal
+image, run as a non-root user, drop unnecessary capabilities, make the filesystem
+read-only where feasible, bound resources, and avoid embedding secrets. The
+example Compose file demonstrates several of these controls.
+
+Docker's current documentation describes the Compose Specification as the
+recommended format for defining services, networks, and volumes; the format is
+implemented by modern Compose CLI versions \cite{docker2026compose}. Commands
+and implementation details remain version-dependent, so CI should verify the
+toolchain it expects.
+
+\section{Infrastructure as code}
+Infrastructure as code makes desired infrastructure reviewable and repeatable.
+It does not make infrastructure deterministic automatically. Providers have
+eventual consistency, external state, secrets, quotas, and destructive changes.
+
+Treat infrastructure changes like application changes:
+
+\begin{itemize}
+  \item plan and review the diff;
+  \item separate creation, migration, and deletion risk;
+  \item protect state and limit its sensitive contents;
+  \item test modules in a disposable environment;
+  \item document manual recovery when automation is unavailable.
+\end{itemize}
+
+\section{Deployment strategies}
+\noindent\begin{tabularx}{\textwidth}{@{}p{0.22\textwidth}p{0.27\textwidth}X@{}}
+\toprule
+Strategy & Benefit & Risk or requirement \\
+\midrule
+Rolling & Gradual replacement with one pool & Old and new versions must coexist \\
+Blue-green & Fast switch between two environments & Doubles capacity and complicates state \\
+Canary & Evidence from a small traffic slice & Requires good segmentation and rollback signals \\
+Feature flag & Decouples code release from user exposure & Flag lifecycle and combinatorial states \\
+\bottomrule
+\end{tabularx}
+
+Rollback is not always safe. A database migration, irreversible message, or
+external side effect can make old code unable to run. Design forward-compatible
+changes and a compensating action where possible.
+
+\section{CI workflow example}
+The repository workflow uses pinned major action versions, a fresh checkout,
+separate example and PDF jobs, and an uploaded artifact. In a real project, add
+permissions with least privilege, dependency review, test result retention,
+protected environments, and secret handling appropriate to the platform.
+
+\begin{exercise}
+Design a release pipeline for a service with a schema migration and a queue
+consumer. Mark which steps can be automatic, which require approval, and what
+signal triggers rollback or a pause.
+\end{exercise}
+
+\section{Chapter summary}
+Delivery should produce traceable, reproducible, observable transitions. Build
+once, configure deliberately, harden containers, review infrastructure changes,
+and choose deployment strategies based on compatibility and rollback reality.

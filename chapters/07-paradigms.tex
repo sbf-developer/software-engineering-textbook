@@ -1,0 +1,88 @@
+\chapter{Object-oriented, functional, procedural, and data-oriented design}
+
+\section{Paradigms are lenses}
+A programming paradigm emphasizes certain ways of representing state,
+behaviour, and composition. Object-oriented design groups data with operations
+and uses encapsulation and polymorphism. Functional design emphasizes expressions,
+immutable values, and explicit transformation. Procedural design emphasizes
+ordered commands and control flow. Data-oriented design arranges data for the
+access patterns of the hardware and workload.
+
+Real systems combine them. A functional core can sit inside an object-oriented
+application; a procedural migration script can protect a data-oriented storage
+layout. The question is whether the chosen representation makes the important
+invariants and costs visible.
+
+\section{Encapsulation and state}
+Encapsulation means clients depend on a stable set of operations rather than
+directly manipulating representation. It helps when the invariant is local and
+the state has a meaningful lifecycle. It becomes harmful when a class is merely a
+namespace for unrelated functions or when inheritance creates hidden coupling.
+
+Prefer composition when behaviour varies independently. Inheritance can express
+a genuine substitutability relation, but sharing code is not by itself a reason
+to create a subtype. A payment gateway that supports `authorize` and `capture`
+may be a port with several adapters; it need not form a deep class hierarchy.
+
+\section{Functional core, imperative shell}
+Pure functions are easier to test because their result depends on explicit input.
+Side effects are still necessary for useful software. A practical split is:
+
+\begin{itemize}
+  \item imperative shell: read HTTP, clock, randomness, database, and network;
+  \item functional core: validate, calculate totals, decide transitions, and
+        construct commands from explicit values.
+\end{itemize}
+
+The Python \texttt{total\_cents} example follows this approach. It accepts data, applies
+rules, and has no network or database dependency. The shell decides when and how
+to call it. This does not eliminate integration tests; it makes the rule-level
+tests fast and diagnostic.
+
+\section{Procedures and data flow}
+Procedural code can be the clearest form for a workflow. A migration or a shell
+script is often easier to audit as a sequence of explicit steps than as a graph
+of objects. The risk is accidental shared state and unclear error handling. Keep
+preconditions, postconditions, and cleanup paths visible.
+
+\section{Data-oriented thinking}
+Performance depends on the whole path: algorithm, data layout, allocation,
+cache behaviour, I/O, concurrency, and workload shape. Data-oriented design
+starts with the hot operations and organizes data so they do not repeatedly
+load irrelevant fields. It is useful in simulations, games, analytics, and
+high-throughput infrastructure; it can make ordinary business code less
+readable when applied without a measured bottleneck.
+
+\section{Choosing a representation}
+Use these questions:
+
+\begin{enumerate}
+  \item What state must be protected by an invariant?
+  \item Which effects are unavoidable, and can they be isolated?
+  \item Does behaviour vary by a stable capability or by a changing data value?
+  \item Is the workload limited by CPU, memory, allocation, I/O, or coordination?
+  \item What will a future reader need to change safely?
+\end{enumerate}
+
+\noindent\begin{tabularx}{\textwidth}{@{}p{0.24\textwidth}X@{}}
+\toprule
+Situation & Often useful starting point \\
+\midrule
+Local lifecycle invariant & Encapsulation around a small state machine \\
+Many transformations and rules & Pure functions and immutable values \\
+Explicit workflow or migration & Procedural sequence with checked steps \\
+Measured hot path and predictable data & Data-oriented layout and profiling \\
+\bottomrule
+\end{tabularx}
+
+\begin{exercise}
+Represent an order cancellation in two ways: a mutable object and a pure
+transition function. For each, state where invalid state is prevented and where
+side effects occur. Which representation gives the clearer test failure?
+\end{exercise}
+
+\section{Chapter summary}
+Paradigms are tools for making state, effects, and cost visible. Combine them
+deliberately. Prefer the simplest representation that protects the important
+invariants and fits the measured workload, and avoid turning stylistic taste into
+an architectural law.

@@ -1,0 +1,107 @@
+\chapter{Selected solutions and reasoning}
+
+\section{Foundations}
+\begin{enumerate}
+  \item A bicycle rental boundary can include reservation, payment authorization,
+        and lock commands. The rider, payment provider, and physical lock are
+        outside it. Invariants include one active rental per bicycle, a return
+        cannot precede a start, and a charged amount matches the tariff snapshot.
+  \item “Fast” becomes a journey, a percentile, a window, and a threshold. For
+        example: p95 from submit to visible confirmation is below 400 ms for a
+        defined payload at a stated load. Add invalid-input and dependency-failure
+        acceptance cases.
+  \item A notification diagram should show the caller, notification service,
+        provider, delivery callback, and operator. The provider is a trust and
+        reliability boundary; callbacks need authentication and replay handling.
+\end{enumerate}
+
+\section{Design and data}
+\begin{enumerate}
+  \setcounter{enumi}{4}
+  \item Useful modules for document import are format parsing, validation,
+        canonical domain model, persistence, and reporting. The parser should not
+        decide authorization or write directly to the database.
+  \item A cursor should encode or reference a stable ordering key and direction.
+        It must not assume that page number remains stable while rows are inserted.
+  \item A subscription state machine might allow trial -> active -> paused ->
+        cancelled, but disallow cancelled -> active without a new subscription or
+        explicit reactivation policy. The rule belongs in one transition function.
+  \item A foreign key with `ON DELETE RESTRICT` prevents deletion while children
+        exist; `ON DELETE CASCADE` is appropriate only when child loss is intended.
+  \item Add the new field, write both fields, read the new field with fallback,
+        backfill, enforce the new invariant, then stop writing and remove the old
+        field after the compatibility window.
+\end{enumerate}
+
+\section{Concurrency and architecture}
+\begin{enumerate}
+  \setcounter{enumi}{9}
+  \item Two reservations can both read stock 1. An atomic update such as
+        `UPDATE stock SET available = available - 1 WHERE sku = ? AND available > 0`
+        followed by checking affected rows prevents the lost update.
+  \item A consumer acknowledges only after its effect is durable. If it crashes
+        before acknowledgment, the message may repeat; use a unique event ID or
+        idempotent upsert and accept that exactly-once effects are not implied.
+  \item With three engineers and modest traffic, a modular monolith minimizes
+        operational and coordination cost. A service split becomes justified by
+        distinct ownership, legal isolation, or a measured scaling boundary.
+  \item An ADR should name workload, transactions, operational skill, migration
+        cost, and alternatives. “SQL is standard” is not enough evidence.
+  \item A dependency rule, migration coexistence test, and tenant-isolation test
+        are three possible fitness functions.
+\end{enumerate}
+
+\section{Quality and operation}
+\begin{enumerate}
+  \setcounter{enumi}{14}
+  \item Cover authenticated allowed access, authenticated denied access,
+        unauthenticated access, malformed identifiers, oversized input, and
+        dependency failure. State which combinations are intentionally omitted.
+  \item For every valid item list, total equals the sum of positive integer
+        quantity-times-price products and remains within the chosen numeric bound.
+  \item An SLO must identify eligible requests, success definition, latency
+        boundary, window, and excluded maintenance if any. Its budget is the
+        complement of the target over the eligible measurement population.
+  \item First stop or rate-limit intake if backlog threatens data freshness, then
+        inspect consumer errors, dependency latency, and poison messages before
+        increasing concurrency.
+  \item A postmortem should preserve evidence, identify the deletion path and
+        missing guard, restore from a verified backup, and add a migration check
+        plus permission or review control. Blaming the operator is not a control.
+\end{enumerate}
+
+\section{Security and human impact}
+\begin{enumerate}
+  \setcounter{enumi}{19}
+  \item Use short-lived, single-purpose reset tokens stored as hashes, bind them
+        to the account and intent, invalidate on use, rate-limit attempts, avoid
+        account enumeration, and log safe audit events.
+  \item Remove secrets and unnecessary personal data from telemetry; define access,
+        retention, deletion, and break-glass review for remaining records.
+  \item Check semantic controls, focus order, visible focus, labels, error
+        announcements, and completion without a pointer device. Confirm with
+        assistive technology rather than relying on a visual inspection.
+  \item Store canonical instants, currency, locale, and user preferences
+        separately. Localize format at the presentation boundary.
+  \item Verify every claimed API and dependency, run tests and security checks,
+        inspect data handling, and require a human owner for approval and release.
+\end{enumerate}
+
+\section{Capstone reasoning}
+\begin{enumerate}
+  \setcounter{enumi}{24}
+  \item An outbox row and the order state belong in one local transaction. The
+        consumer uses a unique event ID and records completion. Re-delivery is
+        expected; the external effect must be idempotent or reconciled.
+  \item A migration should be rerunnable or safely resumable, report rejected
+        rows, compare source and target totals, and stop before destructive work
+        if reconciliation fails.
+  \item A canary needs a cohort, success indicators, a time window, an owner,
+        and an automatic or human-controlled rollback action. Do not expose a
+        wider audience before telemetry is healthy.
+  \item Measure a realistic workload and identify the saturated resource. A
+        higher average throughput number without tail and error data is incomplete.
+  \item The best architecture review names deferred features and the signals that
+        would justify them. Restraint is part of design.
+\end{enumerate}
+

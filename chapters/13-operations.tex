@@ -1,0 +1,74 @@
+\chapter{Observability, operations, incidents, and postmortems}
+
+\section{From running to knowing}
+A running process is not necessarily a useful service. Operations asks whether
+the service is delivering its intended outcome and what a responsible person can
+do when it is not. Observability is the ability to infer internal state from
+externally emitted signals. OpenTelemetry defines a vendor-neutral set of
+telemetry concepts and uses normative terms such as MUST and SHOULD inside its
+specification \cite{opentelemetry2026spec}.
+
+\section{Signals}
+\term{Metrics} summarize values over time: request count, error count, latency,
+queue age, saturation. \term{Logs} record discrete events with context.
+\term{Traces} connect work across process and network boundaries. Use each for
+the question it answers. A trace is not a replacement for a durable audit log,
+and a metric cannot show every cause.
+
+Every signal needs a schema and a cost model. Include request or trace identity,
+route, outcome, dependency, and version where useful. Avoid high-cardinality
+labels such as raw user IDs in metrics. Redact secrets and personal data before
+emission, not only in a dashboard.
+
+\section{Alerting}
+An alert should indicate an actionable condition, have an owner, and explain the
+first safe action. Alert on symptoms that matter to users or operators: an SLO
+burn rate, queue age beyond a business limit, or inability to accept an order.
+Avoid alerts that merely say a process is busy unless somebody can act on them.
+
+A dashboard is a decision surface. Arrange it from outcome to cause: service
+health, user journey, traffic, errors, latency, saturation, dependencies, and
+recent changes. Test it during a failure; a beautiful dashboard that cannot
+answer “what changed?” is not operationally useful.
+
+\section{Runbooks and safe operations}
+A runbook should say when it applies, what evidence to collect, what actions are
+safe, what actions are irreversible, how to escalate, and how to verify recovery.
+Prefer reversible controls: reduce traffic, disable a feature, pause a consumer,
+or increase capacity. Administrative endpoints need authentication,
+authorization, audit, and a break-glass procedure.
+
+\section{Incident response}
+During an incident, stabilize first. Establish a coordinator, a communications
+channel, an incident timeline, and an explicit hypothesis. Separate observations
+from guesses. Record commands and configuration changes. Avoid risky experiments
+on a system whose state is not understood.
+
+An incident is a period where the system's expected behaviour is not being met;
+it is not limited to outages. A privacy exposure, incorrect financial result, or
+unreliable deployment can be an incident even when servers respond normally.
+
+\section{Postmortems}
+A useful postmortem is blameless about individual intent and precise about system
+conditions. Include impact, detection, timeline, contributing factors, what
+worked, what failed, and actions with owners and dates. Do not produce only a
+long list of “be more careful.” Improve a control: add a validation, limit blast
+radius, make a signal actionable, rehearse recovery, or change an approval path.
+
+\section{Change and observability}
+Observability must evolve with the system. A new queue requires queue age and
+dead-letter signals. A new authorization boundary requires denied-access audit
+events. A new batch job needs freshness and completeness, not only process
+uptime. Treat telemetry schemas as compatibility-sensitive APIs.
+
+\begin{exercise}
+Design an alert for an order service whose success SLO is burning budget rapidly.
+Name the indicator, aggregation window, owner, first action, and one false
+positive. Then write the minimum runbook needed to pause new intake safely.
+\end{exercise}
+
+\section{Chapter summary}
+Operations is part of the product. Emit useful, privacy-aware signals; alert on
+actionable user impact; maintain reversible runbooks; coordinate incidents with
+evidence; and convert postmortem learning into stronger system controls.
+

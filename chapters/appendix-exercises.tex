@@ -1,0 +1,60 @@
+\chapter{Cumulative exercises}
+
+\section{Foundations}
+\begin{enumerate}
+  \item Write a system boundary for a bicycle rental service. Name two actors outside the boundary and three invariants inside it.
+  \item Convert three vague feature requests into requirements with measurable acceptance criteria.
+  \item Draw a context diagram for a service that sends notifications through a third-party provider.
+  \item Identify one stakeholder whose risk is not represented by the product requester.
+\end{enumerate}
+
+\section{Design and data}
+\begin{enumerate}
+  \setcounter{enumi}{4}
+  \item Decompose a document-import service around changing decisions and state invariants.
+  \item Design an API for cursor pagination. Explain cursor stability under inserts.
+  \item Model a subscription lifecycle as a state machine and list illegal transitions.
+  \item Write a schema constraint that prevents a child row from referring to a deleted parent.
+  \item Design an expand-and-contract migration for renaming a public field.
+\end{enumerate}
+
+\section{Concurrency and architecture}
+\begin{enumerate}
+  \setcounter{enumi}{9}
+  \item Find a lost-update interleaving in a stock reservation operation and repair it.
+  \item Specify the retry and idempotency behaviour of a message consumer.
+  \item Compare a modular monolith and two services for a team of three engineers.
+  \item Write an ADR for choosing a relational database over a document store.
+  \item State one architecture fitness function for each of three boundaries.
+\end{enumerate}
+
+\section{Quality and operation}
+\begin{enumerate}
+  \setcounter{enumi}{14}
+  \item Build a test matrix for authorization and malformed input.
+  \item Write a property that should hold for exact integer-money totals.
+  \item Create an SLO with a defined measurement boundary and monthly error budget.
+  \item Design a runbook for a growing queue and name the safe first action.
+  \item Perform a postmortem for an accidentally deleted database column.
+\end{enumerate}
+
+\section{Security and human impact}
+\begin{enumerate}
+  \setcounter{enumi}{19}
+  \item Threat-model a password-reset endpoint and include token replay.
+  \item Identify personal data in logs, traces, backups, and analytics for an order system.
+  \item Test a critical flow with keyboard-only navigation and a screen reader.
+  \item List locale assumptions in a billing statement and replace them with explicit data.
+  \item Review an AI-generated patch for invented APIs, insecure defaults, and license risk.
+\end{enumerate}
+
+\section{Capstone extensions}
+\begin{enumerate}
+  \setcounter{enumi}{24}
+  \item Add an outbox and an idempotent event consumer to Ledgerline.
+  \item Add a replayable migration with reconciliation and a failure-injection test.
+  \item Produce a canary deployment plan with a rollback threshold.
+  \item Measure the service under a stated workload and explain the bottleneck.
+  \item Write a one-page architecture review that names what you would not build yet.
+\end{enumerate}
+

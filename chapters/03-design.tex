@@ -1,0 +1,101 @@
+\chapter{Decomposition, abstraction, and boundaries}
+
+\section{The purpose of decomposition}
+Decomposition turns a large problem into units that people can understand,
+change, and test. It is not merely splitting a file. A good boundary hides a
+decision that is likely to change or that should be protected by an invariant.
+Parnas's classic discussion treats information hiding as a criterion for module
+design, rather than a preference for a particular syntax \cite{parnas1972criteria}.
+
+For Ledgerline, a useful first decomposition is:
+
+\begin{center}
+\begin{tikzpicture}[node distance=8mm and 12mm,>=Latex]
+  \node[draw,rounded corners,fill=codebg,minimum width=30mm,minimum height=9mm] (api) {HTTP adapter};
+  \node[draw,rounded corners,fill=codebg,minimum width=30mm,minimum height=9mm,below=of api] (app) {application service};
+  \node[draw,rounded corners,fill=codebg,minimum width=30mm,minimum height=9mm,below=of app] (domain) {order domain};
+  \node[draw,rounded corners,fill=codebg,minimum width=30mm,minimum height=9mm,left=of domain] (store) {store port};
+  \node[draw,rounded corners,fill=codebg,minimum width=30mm,minimum height=9mm,right=of domain] (events) {event port};
+  \node[draw,rounded corners,fill=codebg,minimum width=30mm,minimum height=9mm,below=of store] (sql) {SQL adapter};
+  \node[draw,rounded corners,fill=codebg,minimum width=30mm,minimum height=9mm,below=of events] (queue) {queue adapter};
+  \draw[->,thick,accent] (api) -- (app);
+  \draw[->,thick,accent] (app) -- (domain);
+  \draw[->,thick,accent] (domain) -- (store);
+  \draw[->,thick,accent] (domain) -- (events);
+  \draw[->,thick,accent] (store) -- (sql);
+  \draw[->,thick,accent] (events) -- (queue);
+\end{tikzpicture}
+\end{center}
+
+The arrows represent dependency direction, not necessarily runtime network
+traffic. The domain does not need to know whether persistence is SQLite,
+PostgreSQL, or an in-memory fake. The adapter owns translation between a
+technology's vocabulary and the domain's vocabulary.
+
+\section{Cohesion and coupling}
+\term{Cohesion} asks whether the responsibilities inside a unit belong together.
+\term{Coupling} asks how much one unit knows about another. High cohesion and
+low unnecessary coupling are useful heuristics, not scores to maximize blindly.
+Some coupling is valuable: an invariant about money may be kept close to the
+database constraint that enforces it. The danger is accidental coupling, such as
+a UI importing a database row shape and thereby making a storage migration a UI
+change.
+
+A dependency is especially expensive when it crosses:
+
+\begin{itemize}
+  \item ownership boundaries, because coordination becomes necessary;
+  \item time boundaries, because queues and retries introduce duplication or delay;
+  \item trust boundaries, because input must be authenticated and validated;
+  \item data-lifetime boundaries, because privacy and deletion rules differ;
+  \item release boundaries, because two versions must coexist.
+\end{itemize}
+
+\section{Abstraction and the cost of being wrong}
+An abstraction removes detail so that a person can reason about a larger unit.
+It also hides information. An abstraction is successful when the hidden detail
+can vary without surprising its clients. It is unsuccessful when the abstraction
+promises a simple concept but leaks the complexity through exceptions, latency,
+ordering, or resource usage.
+
+The phrase “repository” can hide a database, but it cannot make a database
+transaction disappear. If callers assume that `save` is atomic while the
+implementation performs three independent writes, the abstraction lies. Make
+important semantics explicit: \texttt{save\_order\_and\_outbox\_event} communicates more
+than `save` if atomicity is essential.
+
+\section{Designing a boundary}
+For each proposed module, write four sentences:
+
+\begin{enumerate}
+  \item Its responsibility is ...
+  \item It guarantees ...
+  \item It may change without requiring ...
+  \item It must not know ...
+\end{enumerate}
+
+Then test the boundary against a plausible change. If changing the tax rate
+requires editing HTTP parsing, SQL queries, and every unit test, the domain rule
+is scattered. If a tax module cannot be tested without a network and a database,
+the boundary is probably too entangled.
+
+\section{When a boundary is too early}
+Premature decomposition creates indirection before the shape of the problem is
+understood. Five interfaces around five lines of code can make a small system
+harder to read. Start with seams that protect a real decision: an external API,
+a security check, a durable write, or a volatile policy. Refactor toward clearer
+boundaries as evidence accumulates. The repository's Python example keeps the
+domain function small because the purpose is visible; it does not manufacture a
+framework around it.
+
+\begin{exercise}
+Take a single function that validates and persists an order. List three changes
+that could occur independently. Design boundaries that isolate those changes,
+then name one cost introduced by each boundary.
+\end{exercise}
+
+\section{Chapter summary}
+Decompose around changing decisions and protected invariants. Use information
+hiding, cohesion, and coupling as reasoning tools. Treat abstractions as
+contracts about semantics, not just shorter names, and delay indirection when it
+does not yet protect a real change.

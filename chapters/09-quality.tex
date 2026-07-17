@@ -1,0 +1,105 @@
+\chapter{Testing, analysis, debugging, and proof}
+
+\section{Testing as evidence}
+A test is an experiment with a programmed oracle. It does not prove that all
+possible behaviour is correct. It provides evidence about a stated input space,
+environment, and observation. The strongest test suite is not the one with the
+largest line count; it is the one that catches important failures and explains
+them quickly.
+
+\noindent\begin{tabularx}{\textwidth}{@{}p{0.22\textwidth}p{0.25\textwidth}X@{}}
+\toprule
+Level & Best at finding & Main cost \\
+Unit & Local rule and edge-case defects & Can miss wiring, configuration, and real dependencies \\
+Component & Contract and integration defects & More setup and slower diagnostics \\
+End to end & Broken user journeys and deployment assumptions & Slow, brittle, and often hard to localize \\
+Property or model & Broad invariant violations and state-machine bugs & Requires a good model and failure shrinking \\
+\bottomrule
+\end{tabularx}
+
+The levels are not a pyramid law. A small system with a strong component test may
+need few end-to-end tests. A safety-critical subsystem may need formal analysis.
+Choose the mix from failure cost, change rate, and observability.
+
+\section{Test design}
+For each behaviour, identify:
+
+\begin{enumerate}
+  \item a representative valid input;
+  \item boundary values and malformed input;
+  \item a state transition or dependency failure;
+  \item the observable result and any invariant that must remain true.
+\end{enumerate}
+
+Avoid asserting incidental representation. If a client only needs an order ID
+and status, do not make it depend on database column order or an internal class.
+Tests are also consumers of an interface; over-specified tests make refactoring
+expensive without increasing confidence.
+
+\section{Static analysis and types}
+Static analysis checks source without executing every path. A type checker can
+catch incompatible values; a linter can catch suspicious constructs; a dataflow
+tool can identify possible taint or resource leaks. False positives impose cost,
+so tune rules and provide an explicit escape hatch with a reason. A passing
+static check is evidence, not a proof of correctness.
+
+Types are especially useful when they encode meaningful distinctions. A string
+for a customer ID and a string for a password are technically interchangeable but
+not semantically interchangeable. A wrapper type or validation boundary can
+reduce accidental mixing. Do not create types that obscure a simple domain rule.
+
+\section{Debugging as hypothesis testing}
+Debugging is a search through competing explanations. Start with a reproducible
+failure and preserve the original evidence. Write the expected and actual
+behaviour, then reduce the input or environment while keeping the failure.
+
+A practical loop is:
+
+\begin{enumerate}
+  \item observe: capture logs, traces, inputs, versions, and timing;
+  \item hypothesize: name a mechanism that could explain the observation;
+  \item predict: identify what else should be true if the hypothesis is correct;
+  \item test: run the smallest discriminating experiment;
+  \item change: fix the cause or update the model, then add a regression check.
+\end{enumerate}
+
+Changing several things at once destroys information. The exception is an active
+incident where stabilization is more important than diagnosis; record temporary
+changes so they can be revisited.
+
+\section{Formal methods in proportion}
+Formal methods use mathematical models to specify or analyze systems. They range
+from assertions and contracts to model checking, theorem proving, and formally
+verified compilation. The benefit is strongest when a small, critical state space
+can be modeled precisely. The cost is building and maintaining the model and
+connecting it to implementation.
+
+An invariant can be simple:
+
+\[
+  \forall i \in \text{order items}: i.quantity > 0 \land i.unit\_price\_cents > 0.
+\]
+
+That statement can be enforced by application validation, a database constraint,
+and tests. More advanced tools can explore concurrent transitions. Use formal
+analysis where it reduces a material risk, not as decoration.
+
+\section{Mutation and negative evidence}
+Mutation testing changes code in small ways and asks whether the tests fail. A
+surviving mutation points to a missing assertion, but mutation scores are not a
+universal quality metric. Similarly, a security test that finds no vulnerability
+does not establish security; it establishes only that the tested attack and
+observation did not reveal one.
+
+\begin{exercise}
+Create a test matrix for an order endpoint with dimensions of authentication,
+payload validity, duplicate key, database failure, and client timeout. Choose the
+smallest set of tests that covers each important interaction and explain what is
+left untested.
+\end{exercise}
+
+\section{Chapter summary}
+Tests provide scoped evidence. Combine unit, component, journey, property, and
+static checks according to risk. Debug by preserving evidence and testing
+hypotheses. Use types, assertions, and formal models when they clarify and reduce
+important risk rather than because a technique is fashionable.

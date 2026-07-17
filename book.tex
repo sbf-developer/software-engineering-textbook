@@ -1,0 +1,203 @@
+\documentclass[11pt,openright]{book}
+
+\usepackage[paperwidth=6.5in,paperheight=9.25in,top=0.78in,bottom=0.72in,inner=0.82in,outer=0.68in,headheight=23pt]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,tabularx,longtable,array}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{url}
+\usepackage{makeidx}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+
+\definecolor{ink}{HTML}{17212B}
+\definecolor{muted}{HTML}{53616D}
+\definecolor{accent}{HTML}{0B7285}
+\definecolor{codebg}{HTML}{F3F6F8}
+\definecolor{codekw}{HTML}{075985}
+\definecolor{codecomment}{HTML}{4D7C0F}
+\definecolor{rulegray}{HTML}{C9D2D9}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=accent,
+  citecolor=accent,
+  urlcolor=accent,
+  pdftitle={Engineering Software},
+  pdfauthor={Scott Brodie Forsyth}
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{rulegray},
+  framerule=0.4pt,
+  framesep=5pt,
+  xleftmargin=7pt,
+  xrightmargin=7pt,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  keywordstyle=\color{codekw}\bfseries,
+  commentstyle=\color{codecomment}\itshape,
+  numbers=left,
+  numberstyle=\tiny\color{muted},
+  numbersep=6pt
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\small\sffamily\color{muted}\leftmark}
+\fancyhead[RO]{\small\sffamily\color{muted}\rightmark}
+\fancyfoot[C]{\small\sffamily\thepage}
+\setlength{\headwidth}{\textwidth}
+
+\setlist{itemsep=2pt,topsep=4pt}
+\setlength{\tabcolsep}{3pt}
+\setcounter{tocdepth}{1}
+\setcounter{secnumdepth}{2}
+\makeindex
+
+\makeatletter
+\renewcommand{\cleardoublepage}{%
+  \clearpage
+  \if@twoside
+    \ifodd\c@page
+    \else
+      \hbox{}\thispagestyle{empty}\newpage
+      \if@twocolumn\hbox{}\newpage\fi
+    \fi
+  \fi
+}
+\makeatother
+
+\newcommand{\term}[1]{\textbf{#1}\index{#1}}
+\newcommand{\artifact}[1]{\texttt{#1}}
+\newenvironment{keyidea}{\begin{quote}\small\itshape\color{accent}}{\end{quote}}
+\newenvironment{tradeoffs}{\begin{quote}\small\color{muted}\textbf{Trade-offs.}\ }{\end{quote}}
+\newenvironment{exercise}{\begin{quote}\small\color{ink}\textbf{Exercise.}\ }{\end{quote}}
+
+\begin{document}
+
+\frontmatter
+\begin{titlepage}
+  \pagecolor{ink}
+  \color{white}
+  \vspace*{1.15in}
+  {\sffamily\fontsize{24}{28}\selectfont\bfseries ENGINEERING SOFTWARE\par}
+  \vspace{0.22in}
+  {\sffamily\Large From Reliable Code to Production Systems\par}
+  \vspace{0.36in}
+  \textcolor{white!55}{\rule{1.2in}{0.8pt}}\par
+  \vfill
+  {\sffamily\large Scott Brodie Forsyth\par}
+  \vspace{0.25in}
+  {\sffamily\small A compact, evidence-aware guide to designing, building,\par\noindent\hspace*{0pt}testing, securing, deploying, and operating software.\par}
+  \thispagestyle{empty}
+\end{titlepage}
+\nopagecolor
+
+\cleardoublepage
+\thispagestyle{empty}
+\vspace*{1.2in}
+\begin{center}
+  {\Large\sffamily\bfseries Engineering software is the practice of making\par}
+  \vspace{0.15in}
+  {\large\sffamily\color{muted}important behaviour dependable under changing conditions.\par}
+\end{center}
+\vfill
+\noindent\small
+Copyright \textcopyright\ 2026 Scott Brodie Forsyth.\par
+\vspace{0.1in}
+This edition is prepared as an editable educational manuscript. Standards,
+dependencies, and platform interfaces change; verify operational details before
+using them in a live system.\par
+\vspace{0.1in}
+Source code examples are provided for learning and are licensed for reuse with
+the repository. Third-party standards and books remain under their original
+licenses.
+
+\cleardoublepage
+\tableofcontents
+
+\chapter*{How to use this book}
+\addcontentsline{toc}{chapter}{How to use this book}
+Software engineering is not a bag of rituals. It is a way of reducing the gap
+between what a system is supposed to do and what it actually does when people,
+networks, data, deadlines, attackers, and future maintainers interact with it.
+
+Each chapter moves between four levels: a mental model, a concrete technique,
+the conditions under which the technique helps, and the way it can fail. The
+running project is a small order-intake service called \emph{Ledgerline}. It is
+intentionally ordinary: it accepts orders, validates them, stores them, exposes
+an API, emits useful signals, and must remain understandable six months later.
+The repository contains smaller examples so that the ideas can be run without
+proprietary infrastructure.
+
+Words such as \emph{must}, \emph{should}, and \emph{may} are used carefully.
+When they are capitalized inside a quoted standard, they retain the meaning of
+that standard. Elsewhere, they indicate the strength of the author's advice,
+not a universal law.
+
+\mainmatter
+\input{chapters/01-engineering}
+\input{chapters/02-requirements}
+\input{chapters/03-design}
+\input{chapters/04-interfaces-data}
+\input{chapters/05-concurrency-distributed}
+\input{chapters/06-architecture}
+\input{chapters/07-paradigms}
+\input{chapters/08-collaboration}
+\input{chapters/09-quality}
+\input{chapters/10-reliability}
+\input{chapters/11-security}
+\input{chapters/12-delivery}
+\input{chapters/13-operations}
+\input{chapters/14-maintenance}
+\input{chapters/15-human-systems}
+\input{chapters/16-leading-projects}
+\input{chapters/17-case-study}
+\input{chapters/18-capstone}
+
+\appendix
+\input{chapters/appendix-repository}
+\input{chapters/appendix-exercises}
+\input{chapters/appendix-solutions}
+
+\backmatter
+\chapter*{Glossary}
+\addcontentsline{toc}{chapter}{Glossary}
+\footnotesize
+\begin{description}[style=nextline,leftmargin=1.35in,labelwidth=1.2in]
+\item[API] A defined interface through which software components exchange requests and results.
+\item[Availability] The proportion of time a service is usable under a stated measurement definition.
+\item[Capacity] The sustainable amount of work a system can handle while meeting its objectives.
+\item[Coupling] The degree to which one component depends on another component's details or timing.
+\item[Deployment] The act of making a version available in an execution environment.
+\item[Idempotency] The property that repeating an operation has the same intended effect as performing it once.
+\item[Invariant] A condition that remains true across a specified operation or state transition.
+\item[Latency] The elapsed time between an operation's start and completion, measured at a defined boundary.
+\item[Observability] The ability to infer internal system state from externally emitted signals.
+\item[Recovery point objective] The maximum acceptable amount of data loss measured in time.
+\item[Recovery time objective] The maximum acceptable time to restore a service after a failure.
+\item[Reliability] The probability that a system performs its required function for a stated period and context.
+\item[Service-level objective] A target for a measurable service indicator over a stated window.
+\item[Technical debt] A present design or implementation choice whose future cost is knowingly incurred to gain a short-term benefit.
+\item[Threat model] A structured description of assets, actors, trust boundaries, threats, and mitigations.
+\end{description}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\printindex
+\end{document}

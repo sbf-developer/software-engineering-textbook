@@ -1,0 +1,91 @@
+\chapter{Version control, review, and collaborative development}
+
+\section{Version control as a reasoning tool}
+Version control records a sequence of states and the intent behind changes. Git
+is a distributed revision control system; its commands let a team compare,
+select, combine, and recover work. The commands are not the process. A process
+is good when it makes change reviewable, integrates often enough to expose
+conflicts, and preserves a trustworthy path from request to released state.
+
+A useful commit is coherent: one idea, a message that explains why, and tests
+that support the changed behaviour. Small does not mean trivial. A database
+migration and the code that requires it may belong in one change if separating
+them would create an invalid intermediate state.
+
+\section{Code review}
+Review is a risk-reduction activity, not a search for stylistic agreement. Read
+the requirement, then the design, then the diff and its tests. Ask:
+
+\begin{itemize}
+  \item Is the behaviour correct for valid, invalid, and repeated inputs?
+  \item Does the change preserve data, security, compatibility, and performance
+        properties that matter?
+  \item Are failures observable and recoverable?
+  \item Is the new abstraction justified by a real boundary?
+  \item Can a future maintainer understand the reason and remove obsolete code?
+\end{itemize}
+
+The Git project's own review guidance emphasizes correctness, clarity, and the
+importance of reviewing test coverage, while also noting that its advice is not
+binding for every project \cite{git2026review}. This is a good example of a
+professional recommendation rather than a law.
+
+\section{Review comments}
+Prefer comments that identify risk and invite a decision:
+
+\begin{quote}
+The retry happens after the database write. If the response is lost, the caller
+can submit again and create a second order. Can we store the idempotency key with
+the result, or document why duplicate creation is acceptable here?
+\end{quote}
+
+This is better than “please refactor.” It connects a concrete path to a property.
+Distinguish blocking correctness or security issues from optional suggestions.
+Resolve disagreements by testing assumptions or asking the owner of the
+requirement to decide, not by escalating the loudest preference.
+
+\section{Documentation that earns its keep}
+Documentation serves different readers:
+
+\noindent\begin{tabularx}{\textwidth}{@{}p{0.24\textwidth}X@{}}
+\toprule
+Document & Primary question \\
+\midrule
+README & How do I run, test, and orient myself? \\
+API reference & What can I call, and what happens? \\
+ADR & Why is the architecture this way? \\
+Runbook & What should an operator do in a known situation? \\
+Comment & Why is this local code non-obvious? \\
+\bottomrule
+\end{tabularx}
+
+Keep a document near the code it describes, automate examples where possible,
+and delete claims that no longer hold. A short, verified runbook is more useful
+than a comprehensive page of guesses.
+
+\section{Branching and integration}
+Long-lived branches defer integration risk. Short-lived branches and continuous
+integration expose conflicts while the author still remembers the change. This
+does not require one branching model. A team may use trunk-based development,
+release branches, or a hybrid when release governance demands it. What matters is
+that the model matches deployment cadence and that it is possible to test the
+state being reviewed.
+
+\section{Psychological safety and accountability}
+Review quality depends on the social system. People need permission to report a
+risk, question a requirement, and admit uncertainty. Psychological safety does
+not mean low standards; it makes high standards discussable. Accountability is
+stronger when the system records decisions and evidence instead of assigning
+blame for every defect.
+
+\begin{exercise}
+Write three review comments on a hypothetical change that adds a cache. One
+should concern correctness, one privacy or security, and one operability. Mark
+which are blocking and why.
+\end{exercise}
+
+\section{Chapter summary}
+Use version control to preserve intent and reviewable history. Review behaviour,
+risk, tests, and operational consequences rather than personal style. Keep
+documentation purpose-specific, integrate frequently enough to expose risk, and
+build a social environment where uncertainty can be reported early.

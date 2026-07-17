@@ -1,0 +1,99 @@
+\chapter{Architecture styles and trade-offs}
+
+\section{Architecture is a set of consequential decisions}
+Architecture describes the significant structures, boundaries, and constraints
+that shape a system. A diagram is useful only when it helps someone decide,
+implement, operate, or change the system. A box labelled “service” is not an
+architecture unless its responsibility, communication, data ownership, and
+failure behaviour are understood.
+
+\section{Common styles}
+\noindent\begin{tabularx}{\textwidth}{@{}p{0.23\textwidth}p{0.26\textwidth}X@{}}
+\toprule
+Style & Helps when & Costs and failure modes \\
+\midrule
+Modular monolith & One team needs strong local transactions and simple deployment & A shared process can become tangled; scaling and isolation are coarse. \\
+Layered system & Responsibilities have a stable vertical flow & Layers become pass-through plumbing or leak abstractions. \\
+Ports and adapters & Domain logic should remain independent of infrastructure & Too many interfaces obscure a small system; mappings must be maintained. \\
+Event-driven & Producers and consumers need temporal decoupling & Ordering, retries, schemas, and debugging become distributed concerns. \\
+Microservices & Teams need independent ownership and deployment at meaningful boundaries & Network failure, data ownership, versioning, and operational cost multiply. \\
+\bottomrule
+\end{tabularx}
+
+None is the universally mature choice. A microservice is not automatically more
+scalable, and a monolith is not automatically a prototype. The decision should
+be driven by boundaries of change, ownership, failure isolation, deployment
+independence, data consistency, and capacity rather than by fashion.
+
+\section{Architecture decision records}
+An architecture decision record (ADR) keeps a decision close to its reasons:
+
+\begin{enumerate}
+  \item Context: what forces and constraints exist?
+  \item Decision: what will we do?
+  \item Alternatives: what serious options were considered?
+  \item Consequences: what becomes easier, harder, or newly risky?
+  \item Status: proposed, accepted, superseded, or rejected.
+\end{enumerate}
+
+An ADR is not a vote and not a substitute for measurement. It is a memory aid.
+If a decision was made under an assumption about traffic, team size, or a vendor,
+record the assumption and a trigger for revisiting it.
+
+\section{Data ownership}
+In a distributed architecture, the hardest boundary is often data. If two
+services write the same tables, ownership is nominal. If they have separate
+stores, cross-service transactions become workflows with compensation or
+reconciliation. The right choice depends on consistency requirements and
+failure tolerance.
+
+For Ledgerline, keep order state in one database while the domain is small. A
+separate payment service may make sense when legal responsibility, risk controls,
+or independent scaling require it. Splitting it merely to create more boxes
+would make failures harder to recover from without solving a real constraint.
+
+\section{Architecture fitness functions}
+A \term{fitness function} is a repeatable check for an architectural property.
+Examples:
+
+\begin{itemize}
+  \item a dependency rule that prevents the domain package importing HTTP code;
+  \item a migration test that proves an old and new application version can coexist;
+  \item a load test that measures p95 latency at a stated arrival rate;
+  \item a security test that rejects access across a tenant boundary;
+  \item an accessibility test that checks keyboard navigation for a critical flow.
+\end{itemize}
+
+Fitness functions do not prove the architecture is good. They catch regression
+against properties the team has decided matter. A metric without a decision
+attached can become decorative or actively misleading.
+
+\section{Architecture review}
+Review the smallest set of questions that could change the design:
+
+\begin{itemize}
+  \item What are the critical user journeys and failure consequences?
+  \item Which state is authoritative and which copies are disposable?
+  \item What happens when every dependency is slow, unavailable, or inconsistent?
+  \item How is a change released and rolled back while old clients remain?
+  \item Which trust boundaries, secrets, personal data, and audit obligations exist?
+\end{itemize}
+
+\begin{tradeoffs}
+Centralization simplifies coordination and can create a bottleneck. Distribution
+can improve isolation and team autonomy and can also multiply failure modes. The
+correct architecture is the smallest one that meets the real constraints with
+known consequences.
+\end{tradeoffs}
+
+\begin{exercise}
+Choose a modular monolith, a service split, or an event-driven design for an
+application that has one team, 20 requests per second, a strict audit trail, and
+one database. Defend the choice, then identify the first signal that would make
+you reconsider it.
+\end{exercise}
+
+\section{Chapter summary}
+Architecture is about boundaries and consequences. Select a style for ownership,
+failure, change, data, and capacity reasons. Record assumptions in ADRs and turn
+important architectural properties into automated or observable fitness checks.

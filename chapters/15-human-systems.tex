@@ -1,0 +1,84 @@
+\chapter{Accessibility, internationalization, ethics, sustainability, and AI assistance}
+
+\section{People are part of the operating environment}
+Software affects people with different abilities, languages, devices, resources,
+and power. Human requirements are not decorative polish. A service that cannot
+be used with a keyboard, that assumes one date format, or that quietly denies a
+group access has a functional defect for those users.
+
+WCAG 2.2 organizes accessibility guidance around perceivable, operable,
+understandable, and robust principles, with testable success criteria
+\cite{w3c2023wcag}. Treat conformance as a useful baseline, not as proof that a
+particular person can complete a task. Test with assistive technologies and with
+people who use them when possible.
+
+\section{Practical accessibility}
+For a web interface, check semantic structure, heading order, labels, focus
+visibility, keyboard operation, contrast, motion preferences, error recovery,
+live-region announcements, and responsive zoom. Do not rely on color alone. Make
+the primary task possible without a mouse and without a fast connection.
+
+Accessibility must include operational interfaces. A dashboard with a tiny red-
+green status indicator can exclude operators with color-vision differences and
+can encourage unsafe decisions under pressure.
+
+\section{Internationalization}
+Separate translatable content from code, support plural rules, keep user locale
+and time zone explicit, format numbers and dates according to context, and avoid
+assuming names, addresses, or writing direction. Store canonical instants and
+localize presentation. Test long strings, right-to-left layouts, non-ASCII input,
+and culturally unfamiliar calendars where relevant.
+
+\section{Sustainability}
+Software consumes energy through computation, storage, networks, manufacturing,
+and replacement cycles. A smaller carbon footprint can come from efficient
+algorithms, right-sized infrastructure, caching, data retention limits, longer
+hardware life, and avoiding work that has no user value. Optimization may trade
+energy against latency or availability; measure the relevant system boundary
+instead of claiming that one technique is always greener.
+
+\section{Ethics and power}
+Ask who benefits, who bears risk, who can contest a decision, and who can leave
+the system. A model may be statistically accurate and still unfairly allocate
+opportunity. A monitoring feature may improve security and also enable coercion.
+Document purpose, limits, affected groups, appeal paths, and governance. Ethical
+analysis is not solved by adding the word “responsible” to a project name.
+
+\section{Responsible AI-assisted development}
+AI assistants can accelerate drafting, search, and exploration. They can also
+invent APIs, reproduce insecure code, leak confidential context, or create an
+illusion of review. Treat generated code as an untrusted contribution:
+
+\begin{enumerate}
+  \item specify the behaviour and constraints before prompting;
+  \item review generated code like an external patch;
+  \item run tests, static analysis, dependency and secret checks;
+  \item verify licenses, provenance, privacy, and security-sensitive logic;
+  \item retain human ownership for design, approval, and incident response.
+\end{enumerate}
+
+Never accept a citation, benchmark, command, or library interface merely because
+it sounds plausible. Check primary documentation and execute safe examples.
+AI assistance is a tool for increasing feedback speed, not a transfer of
+accountability.
+
+\section{Inclusive design review}
+Include affected perspectives before implementation, not only in a final audit.
+Use a short risk register with severity, evidence, mitigation, owner, and review
+date. Ask what happens to a person who has no high-end device, cannot hear an
+alert, has a different name format, or is wrongly classified. These questions
+often reveal ordinary usability and reliability improvements as well as ethical
+risks.
+
+\begin{exercise}
+Choose a feature flag that automatically limits accounts after suspicious
+activity. Identify accessibility, language, privacy, fairness, and appeal risks.
+Design a human-review path and three metrics that could reveal harm.
+\end{exercise}
+
+\section{Chapter summary}
+Design for real variation in people and contexts. Use accessibility standards as
+a baseline, make locale assumptions explicit, measure sustainability trade-offs,
+analyze power and contestability, and verify AI-assisted work with the same or
+stronger discipline as human-authored code.
+

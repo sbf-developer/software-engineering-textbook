@@ -1,0 +1,53 @@
+\chapter{Repository and tool guide}
+
+\section{Quick start}
+From the repository root:
+
+\begin{lstlisting}[language=bash]
+make test
+make pdf
+\end{lstlisting}
+
+The first command runs standard-library checks. It compiles the C++ example with
+warnings enabled, executes the TypeScript file with Node.js, validates SQL with
+SQLite, and runs the shell check in a mocked mode. The second command runs
+LaTeX, BibTeX, MakeIndex, and the final PDF build.
+
+\section{Example inventory}
+\noindent\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.3\textwidth}X@{}}
+\toprule
+Path & Purpose \\
+\midrule
+\path{examples/python/ledgerline.py} & Domain validation and exact money calculation \\
+\path{examples/python/app.py} & Dependency-free health endpoint \\
+\path{examples/typescript/order.ts} & Typed client-side calculation \\
+\path{examples/java/RetryPolicy.java} & Bounded exponential backoff \\
+\path{examples/cpp/latency_bucket.cpp} & Percentile selection over a sample \\
+\path{examples/sql/schema.sql} & Relational constraints and an aggregate view \\
+\path{examples/shell/healthcheck.sh} & Fail-fast health probe \\
+\path{Dockerfile} and \path{compose.yaml} & Minimal container and local service orchestration \\
+\bottomrule
+\end{tabularx}
+
+The examples are intentionally small. A small example can expose a rule without
+requiring a framework, cloud account, or generated boilerplate. Production use
+would require authentication, persistence lifecycle, request parsing, rate
+limits, structured telemetry, deployment policy, and a threat model.
+
+\section{Validation policy}
+The repository distinguishes “verified here” from “instructions for another
+environment.” The Python, SQL, shell, C++, and Node checks are run by the script
+\path{scripts/verify_examples.py}. The Java source is dependency-free and includes a
+compile command; this build environment has a Java runtime but not a compiler,
+so the CI or a local JDK should compile it. The Docker setup is inspected as
+source; Docker is optional in the current environment.
+
+This distinction is important. A source file cannot be described as compiled
+merely because it looks syntactically familiar. Record the toolchain and the
+exact command used for verification.
+
+\section{Updating the manuscript}
+Edit chapter files rather than generated build files. Run `make pdf`, render the
+PDF pages, inspect the title page, contents, code blocks, tables, and diagrams,
+then run `make test`. If references change, rebuild BibTeX and the index. Keep
+claims about versioned tools tied to a dated reference or a version range.

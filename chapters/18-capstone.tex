@@ -1,0 +1,60 @@
+\chapter{Capstone: from requirement to operated release}
+
+\section{The assignment}
+Design and implement a service that imports a customer order file, validates it,
+stores accepted orders, exposes a query endpoint, and produces an operational
+report. You may use the repository's Ledgerline examples as a starting point,
+but the capstone should make its own decisions explicit.
+
+\section{Required deliverables}
+\begin{enumerate}
+  \item a one-page problem statement with stakeholders, non-goals, and risks;
+  \item an API and data specification with invalid examples;
+  \item an architecture diagram and at least two ADRs;
+  \item a working implementation with unit, component, and migration tests;
+  \item a threat model and security verification checklist;
+  \item a container image and CI workflow;
+  \item an SLO, dashboard or query plan, and recovery runbook;
+  \item a migration plan for one schema change;
+  \item an incident scenario and blameless postmortem;
+  \item a short reflection on accessibility, internationalization, sustainability,
+        and AI-assisted development.
+\end{enumerate}
+
+\section{A release checklist}
+\noindent\begin{longtable}{@{}p{0.07\textwidth}p{0.47\textwidth}p{0.28\textwidth}@{}}
+\toprule
+Done & Check & Evidence \\
+\midrule
+ & Behaviour and non-goals are clear & reviewed requirements \\
+ & Invalid input is bounded and rejected & tests and validation code \\
+ & Authorization is tested on allowed and denied paths & security tests \\
+ & Data invariants exist at the right boundary & schema and migration checks \\
+ & Retries and unknown outcomes are specified & contract and state model \\
+ & Artifact is traceable to source and checks & CI record \\
+ & Deployment is observable and reversible & runbook and rollout plan \\
+ & Backups or exports can be restored & restore evidence \\
+ & Accessibility and locale paths are tested & manual or automated evidence \\
+ & Dependencies and licenses are reviewed & inventory and policy \\
+\bottomrule
+\end{longtable}
+
+\section{How to present the design}
+Begin with the user-visible outcome. Show one complete path, then one failure
+path. State assumptions before diagrams. Explain why the design is sufficient
+for the current constraints and what would force a different architecture.
+Demonstrate a test failure or simulated incident rather than claiming that a
+feature is “production ready” without evidence.
+
+\section{Final perspective}
+The central habit of software engineering is to turn invisible assumptions into
+visible, testable, revisable decisions. Reliable systems are not produced by one
+perfect design. They emerge from boundaries that fit the problem, feedback that
+arrives before consequences become large, and teams that treat operation and
+maintenance as part of building.
+
+\begin{keyidea}
+Build the smallest system that satisfies the important constraints, but make its
+constraints explicit enough that a future team can safely discover when “smallest”
+is no longer sufficient.
+\end{keyidea}

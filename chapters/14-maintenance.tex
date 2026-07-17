@@ -1,0 +1,84 @@
+\chapter{Refactoring, technical debt, legacy systems, and migrations}
+
+\section{Maintenance is the normal state}
+Most software cost occurs after the first release: bugs are fixed, dependencies
+change, requirements grow, and people learn what the system really does. A design
+that is easy to create but hard to change is not finished engineering.
+
+\section{Refactoring}
+Refactoring changes internal structure while preserving specified external
+behaviour. Fowler's book popularized a catalog of small transformations and the
+discipline of keeping the system working while its design improves
+\cite{fowler2018refactoring}. The key precondition is a trustworthy safety net:
+tests, assertions, domain invariants, or a controlled comparison.
+
+A safe sequence is:
+
+\begin{enumerate}
+  \item characterize current behaviour, including surprising behaviour;
+  \item make one structural change;
+  \item run fast checks and inspect the diff;
+  \item preserve or improve the boundary;
+  \item repeat, then remove the obsolete path.
+\end{enumerate}
+
+Do not call a behaviour change a refactoring. A combined structural and product
+change makes failures harder to attribute and rollback more difficult.
+
+\section{Technical debt}
+Technical debt is a metaphor for an intentional or accidental future cost. It
+can be rational: a temporary adapter may enable a time-critical launch. It is
+dangerous when the cost is not recorded, the interest is underestimated, or no
+repayment trigger exists. Distinguish debt from mere code you dislike. A messy
+but stable module may be cheaper than a fashionable rewrite.
+
+Record debt with:
+
+\begin{itemize}
+  \item the shortcut and why it was taken;
+  \item the risk or recurring cost;
+  \item evidence of impact;
+  \item the condition that makes repayment worthwhile;
+  \item an owner or review date.
+\end{itemize}
+
+\section{Legacy systems}
+Legacy means important software whose current behaviour is poorly understood or
+whose constraints are hard to change. The first task is not to replace it. It
+is to map dependencies, data, users, operational procedures, and hidden
+contracts. Add characterization tests at the boundary. Capture current outputs
+before changing internals.
+
+A strangler approach can route one capability through a new implementation while
+the old system remains. It reduces a big-bang cutover but creates two systems,
+data synchronization, and ambiguous ownership during the transition.
+
+\section{Migrations}
+For a data migration, define source and target invariants, transformation rules,
+handling of invalid rows, reconciliation totals, rollback or compensation, and
+the cutover criterion. Run a dry run against representative data. Measure not
+only whether rows copied but whether user-visible meaning was preserved.
+
+For a service migration, use shadow traffic only when privacy and side effects
+are controlled. Compare outputs with a defined equivalence relation. A new
+implementation may be “more correct” and still break clients that depended on
+old rounding, ordering, or error codes; decide which compatibility is required.
+
+\section{When to rewrite}
+A rewrite is justified by a concrete constraint: unsupported platform, unsafe
+security posture, impossible performance target, or cost that exceeds a staged
+transition. Estimate the work of reproducing undocumented behaviour, migrating
+data, retraining operators, and running both systems. “The code is old” is not a
+sufficient business case.
+
+\begin{exercise}
+Plan a migration from a legacy order table that stores money as floating point to
+integer cents. Include discovery, rounding policy, dual read/write period,
+reconciliation, rollback, and the point at which the old column can be removed.
+\end{exercise}
+
+\section{Chapter summary}
+Maintenance is the main lifecycle, not a cleanup phase. Refactor in small safe
+steps, record technical debt as a decision with a trigger, characterize legacy
+behaviour, and migrate data with explicit invariants and reconciliation.
+

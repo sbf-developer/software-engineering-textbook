@@ -1,0 +1,113 @@
+\chapter{Case study: engineering Ledgerline}
+
+\section{Context}
+Ledgerline accepts small orders from a web client and an internal support tool.
+The first release has one team and modest traffic. Orders are commercially
+important, must be auditable, and must not be duplicated by a retry. The team
+chooses a modular monolith with a relational database. This is a deliberate
+starting point, not a claim that every order system should remain a monolith.
+
+\section{Requirements and boundaries}
+The initial slice contains five obligations:
+
+\begin{enumerate}
+  \item validate positive quantities, positive integer prices, and a non-empty customer ID;
+  \item calculate money exactly in integer cents;
+  \item persist one accepted order and its items atomically;
+  \item make retried creation idempotent through a unique key and stored result;
+  \item expose health and operational signals without exposing personal data.
+\end{enumerate}
+
+The system explicitly does not include payment capture, inventory reservation,
+or international tax law. Excluding those features is a safety decision: their
+contracts and failure modes have not yet been designed.
+
+\section{Architecture}
+\begin{center}
+\begin{tikzpicture}[node distance=4mm and 4mm,>=Latex,font=\small]
+  \node[draw,rounded corners,fill=codebg,minimum width=21mm,minimum height=8mm] (client) {clients};
+  \node[draw,rounded corners,fill=codebg,minimum width=25mm,minimum height=8mm,right=of client] (http) {HTTP adapter};
+  \node[draw,rounded corners,fill=codebg,minimum width=29mm,minimum height=8mm,right=of http] (domain) {domain + application};
+  \node[draw,rounded corners,fill=codebg,minimum width=22mm,minimum height=8mm,right=of domain] (db) {relational DB};
+  \node[draw,rounded corners,fill=codebg,minimum width=27mm,minimum height=8mm,below=of domain] (telemetry) {telemetry + runbook};
+  \draw[->,thick,accent] (client) -- (http);
+  \draw[->,thick,accent] (http) -- (domain);
+  \draw[->,thick,accent] (domain) -- (db);
+  \draw[->,thick,accent] (http) |- (telemetry);
+  \draw[->,thick,accent] (domain) -- (telemetry);
+\end{tikzpicture}
+\end{center}
+
+The reference repository separates the domain calculation from the standard
+library HTTP shell. The SQL schema repeats critical domain constraints. The
+container runs as an unprivileged user with a read-only filesystem and a
+healthcheck. These are modest controls, but each is visible and testable.
+
+\section{API contract}
+An illustrative request is:
+
+\begin{lstlisting}[language={},caption={The body is a data contract, not a Python object.}]
+POST /orders
+Idempotency-Key: 8c4a...
+Content-Type: application/json
+
+{"customer_id":"customer-1",
+ "items":[{"sku":"book","quantity":2,"unit_price_cents":1250}]}
+\end{lstlisting}
+
+On success, return a stable order identifier, status, and exact money values.
+For a malformed request, return a client error without writing. For a reused
+key with a different payload, reject the conflict rather than silently choosing
+one request. For an unknown outcome after a timeout, let the caller retry with
+the key and retrieve the stored result.
+
+\section{Reviewing the implementation}
+The Python domain module is short enough to inspect line by line:
+
+\lstinputlisting[language=Python,caption={The domain calculation has explicit validation.}]{examples/python/ledgerline.py}
+
+The code deliberately uses integer cents and a decimal library only for the
+illustrative tax calculation. In a real financial system, tax policy, rounding
+jurisdiction, currency, refunds, and audit requirements need a larger domain
+model. The example is not a payment ledger.
+
+The SQL schema is an independent guard. The test runner executes it in an
+in-memory SQLite database and verifies that the view agrees with the inserted
+line item. A production database choice changes locking, migrations, backups,
+and operational procedures; the SQL illustrates principles rather than a vendor
+recommendation.
+
+\section{Failure analysis}
+\noindent\begin{tabularx}{\textwidth}{@{}p{0.22\textwidth}p{0.27\textwidth}X@{}}
+\toprule
+Failure & Detection & Response \\
+\midrule
+Client retries after lost response & Idempotency-key lookup and duplicate metric & Return stored result; alert on unusual conflict rate. \\
+Database unavailable & Error ratio, dependency latency, health check & Fail closed, preserve request identity, retry with bounded backoff. \\
+Invalid quantity import & Database constraint and validation error & Reject transaction; record safe diagnostic. \\
+Slow dependency added later & Trace and p95/p99 latency & Deadline, isolation, capacity review, or asynchronous workflow. \\
+Secret in log & Secret scanning and log review & Revoke, scrub, investigate access, add regression check. \\
+\bottomrule
+\end{tabularx}
+
+Each row names a detection and a response. “Add monitoring” would be too vague;
+the signal has a source and an action.
+
+\section{What would change at larger scale}
+At higher traffic, the team might add a connection pool, read replicas, queue
+workers, partitioning, or independent services. Each change creates new questions:
+which data is authoritative, how are duplicates reconciled, how are versions
+coordinated, and how are operators alerted? The existing boundary makes these
+questions easier to isolate but does not answer them automatically.
+
+\begin{exercise}
+Extend Ledgerline with a payment authorization workflow. Add states for unknown
+outcomes, a reconciliation job, an outbox event, and an audit record. Explain why
+your design does not promise exactly-once effects across the payment provider.
+\end{exercise}
+
+\section{Chapter summary}
+A small system can demonstrate serious engineering: explicit scope, exact money,
+database invariants, idempotency, operational signals, unprivileged deployment,
+and failure-oriented review. Scaling the system means revisiting constraints,
+not replacing reasoning with more infrastructure.

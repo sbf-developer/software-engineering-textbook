@@ -1,0 +1,119 @@
+\chapter{Requirements, specifications, and stakeholders}
+
+\section{From requests to obligations}
+“Make checkout faster” is a request, not yet a requirement. It does not say
+which users, which journey, which measurement boundary, or what trade-off is
+acceptable. A useful requirement names an actor, an observable behaviour, a
+condition, and a threshold or invariant when one matters.
+
+One Ledgerline requirement can be written as:
+
+\begin{quote}
+When a caller submits a syntactically valid order with an unused idempotency key,
+the service shall persist one accepted order and return its identifier. Repeating
+the same request with the same key shall return the original result without
+creating another order.
+\end{quote}
+
+This statement creates questions: How long is a key retained? What if the first
+request timed out after commit? Must the payload match on reuse? What error does a
+conflicting payload receive? Requirements become useful when their boundary
+cases are discussed rather than hidden.
+
+\section{Stakeholder analysis}
+A stakeholder is anyone who can affect, use, constrain, be affected by, or be
+held accountable for the system. The person requesting a feature is not always
+the person who bears its risks. A small table is often enough to uncover this.
+
+\noindent\begin{tabularx}{\textwidth}{@{}p{0.19\textwidth}p{0.24\textwidth}X@{}}
+\toprule
+Stakeholder & Interest & Questions \\
+\midrule
+Customer & A correct, understandable order & What counts as confirmation? Can the order be retried safely? \\
+Support & Ability to explain outcomes & Can a person find the request, status, and reason for rejection? \\
+Operator & Stable service and recoverable data & What is monitored, backed up, and safe to change? \\
+Finance & Reconciled money & Which values are authoritative, and how are corrections audited? \\
+Security and privacy & Limited exposure and accountability & Which data is collected, for what purpose, and under whose authority? \\
+\bottomrule
+\end{tabularx}
+
+Stakeholder analysis does not mean accepting every preference. It makes the
+conflict explicit. A customer may want unlimited retention for convenience while
+privacy policy requires deletion. An operator may want a safe pause while a
+commercial team wants availability. Engineering supplies options and evidence;
+governance decides which values prevail.
+
+\section{Functional and quality requirements}
+Functional requirements describe behaviour: create an order, cancel it, export a
+record. Quality requirements describe conditions on that behaviour: a latency
+percentile, a recovery time, an accessibility criterion, or a permitted data
+residency. The categories interact. “Returns a result” is incomplete if the
+result is too late for the user, cannot be accessed by keyboard, or exposes a
+secret in logs.
+
+Use a requirement record with at least:
+
+\begin{enumerate}
+  \item identifier and short name;
+  \item rationale and stakeholders;
+  \item normative statement;
+  \item acceptance examples, including invalid cases;
+  \item measurable quality target and measurement boundary;
+  \item dependencies, assumptions, and unresolved decisions;
+  \item owner and review date.
+\end{enumerate}
+
+\section{Specifications as executable agreements}
+A specification is valuable when independent people can use it to predict the
+same behaviour. Examples include an OpenAPI document, a SQL schema, a property
+test, a protocol state machine, or a runbook. A prose requirement remains
+important for purpose and context, but a machine-checkable representation catches
+drift earlier.
+
+Do not make the specification larger than the uncertainty it resolves. A stable
+public API deserves explicit compatibility rules. A private function may need
+only a type, a test, and a clear name. Excess ceremony creates documents that
+are neither read nor updated.
+
+\section{Acceptance and examples}
+Examples expose ambiguity. The following set describes the same rule from three
+angles:
+
+\begin{itemize}
+  \item Given two units at 1,250 cents, the subtotal is 2,500 cents.
+  \item Given quantity zero, the request is rejected before persistence.
+  \item Given the same idempotency key twice with the same payload, the second
+        response refers to the first order.
+\end{itemize}
+
+Examples are not a replacement for general rules. They are probes that make the
+rule concrete and reveal missing decisions. Property-based tests can then state
+the broader invariant: for every valid collection of positive integer prices and
+quantities, the total is an integer and equals the sum of each product.
+
+\section{Change and traceability}
+Requirements change because the world changes. A useful traceability chain is:
+requirement -> design decision -> code -> automated check -> operational signal.
+The chain should be lightweight enough to maintain. A commit message or issue
+identifier can be sufficient for a small team; regulated work may need a formal
+record. The principle is the same: a future reader should be able to ask why a
+constraint exists and find evidence.
+
+\begin{tradeoffs}
+Detailed upfront specifications reduce some ambiguity but can freeze wrong
+assumptions. Pure improvisation learns quickly but can leave invisible contracts.
+Use more formality where the cost of misunderstanding is high, and keep the
+feedback cycle short where uncertainty is high.
+\end{tradeoffs}
+
+\begin{exercise}
+Turn “the report page should feel responsive” into a measurable requirement.
+State the user journey, the measurement boundary, the percentile and time window,
+the test data shape, and one reason the target might need revision.
+\end{exercise}
+
+\section{Chapter summary}
+Requirements become engineering material when they identify actors, behaviour,
+conditions, and evidence. Include quality properties, examine stakeholders who
+bear risks, use examples to expose ambiguity, and keep a trace from intent to
+operation without creating paperwork that nobody can maintain.

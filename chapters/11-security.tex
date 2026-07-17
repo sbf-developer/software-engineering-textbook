@@ -1,0 +1,99 @@
+\chapter{Security engineering, privacy, and threat modelling}
+
+\section{Security is a system property}
+Security engineering protects assets against unwanted actions under a stated
+threat model. It includes confidentiality, integrity, availability, authenticity,
+accountability, and privacy. A library patch cannot compensate for an endpoint
+that authorizes the wrong tenant or logs credentials.
+
+Start by naming assets and consequences:
+
+\noindent\begin{tabularx}{\textwidth}{@{}p{0.23\textwidth}p{0.26\textwidth}X@{}}
+\toprule
+Asset & Adversary or accident & Consequence \\
+\midrule
+Order data & Cross-tenant read or export error & Confidentiality and legal exposure \\
+Payment state & Forged callback or replay & Financial loss and reconciliation failure \\
+Credentials & Log leak or phishing & Account takeover \\
+Deployment pipeline & Malicious dependency or stolen token & System-wide compromise \\
+\bottomrule
+\end{tabularx}
+
+\section{Threat modelling}
+A lightweight threat model records actors, assets, entry points, trust boundaries,
+and abuse cases. STRIDE is one categorization technique; attack trees, misuse
+cases, and data-flow diagrams are alternatives. The technique is useful when it
+changes a design or test. Listing threats without owners or mitigations is a
+worksheet, not security engineering.
+
+For an order API, ask:
+
+\begin{enumerate}
+  \item Can an unauthenticated caller reach it?
+  \item How is tenant ownership derived and checked on every read and write?
+  \item Can a caller replay a payment callback or idempotency key?
+  \item Are quantities, IDs, URLs, files, and error messages bounded and encoded?
+  \item Which secrets cross the process, logs, build system, and backups?
+\end{enumerate}
+
+\section{Secure defaults and input handling}
+Default-deny authorization, least privilege, parameterized database queries,
+context-appropriate output encoding, safe error messages, bounded input, and
+secure transport are durable principles. “Validate input” is incomplete: validate
+syntax at the boundary, enforce domain rules in the domain, and enforce critical
+invariants in storage. Canonicalize before comparing where multiple encodings
+could represent the same resource.
+
+Authentication identifies a principal; authorization decides whether that
+principal may perform a specific action on a specific resource. An authenticated
+user is not automatically authorized to read every order. Check authorization
+server-side, close to the resource access, and test both allowed and denied paths.
+
+The OWASP ASVS provides a versioned basis for testing web application security
+controls and requirements; its identifiers can change between versions, so cite
+the exact version when using a requirement \cite{owasp2025asvs}.
+
+\section{Secrets and cryptography}
+Do not store secrets in source control, client bundles, ordinary logs, or error
+messages. Use a secret manager or protected environment injection, rotate keys,
+limit access, and record a plan for compromise. Choose well-reviewed cryptographic
+primitives through a maintained library. Do not invent encryption or password
+hashing schemes. Encryption does not solve authorization, key management, or
+metadata leakage.
+
+\section{Privacy by design}
+Privacy includes purpose limitation, data minimization, access control,
+retention, deletion, transparency, and accountability. A personal-data field
+should have a reason, an owner, a retention rule, and an access path. Test exports
+and deletion across caches, replicas, logs, backups, analytics, and derived data.
+Legal obligations vary by jurisdiction; this chapter offers engineering
+controls, not legal advice.
+
+\section{Supply-chain security}
+Record dependency versions and integrity, review transitive risk, protect build
+credentials, produce provenance where possible, and make the release artifact
+reproducible enough to investigate. NIST's SSDF provides a high-level vocabulary
+for integrating secure development practices into a lifecycle \cite{nist2022ssdf}.
+As of this edition's research date, NIST had also published an initial public
+draft for a revision; a draft should not be represented as a final standard
+\cite{nist2025ssdfdraft}.
+
+\section{Security verification}
+Use layered evidence: code review, static checks, dependency review, unit and
+integration tests, dynamic testing, configuration checks, secret scanning, and
+authorized penetration testing. Keep a vulnerability response path with
+severity, owner, affected versions, remediation, disclosure, and verification.
+No checklist proves absence of vulnerabilities. The aim is to reduce likely
+failure, limit impact, and improve recovery.
+
+\begin{exercise}
+Draw a data-flow diagram for a multi-tenant order API. Mark trust boundaries and
+write five abuse cases. For each, choose one preventive control and one test that
+would detect a regression.
+\end{exercise}
+
+\section{Chapter summary}
+Security is a property of architecture, code, data, people, and operations.
+Model assets and adversaries, separate authentication from authorization, use
+secure defaults and layered validation, minimize and govern personal data, and
+keep standards versioned and evidence-based.

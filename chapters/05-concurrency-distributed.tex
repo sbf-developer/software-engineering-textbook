@@ -1,0 +1,113 @@
+\chapter{Concurrency, networking, and distributed systems}
+
+\section{Concurrency is about interleaving}
+Concurrency means multiple activities can make progress during overlapping
+intervals. Parallelism is simultaneous execution. A single-threaded event loop
+can be concurrent without being parallel; multiple CPU cores can be parallel.
+The distinction matters for reasoning, resource limits, and performance claims.
+
+The basic danger is an interleaving that violates an invariant. Suppose two
+requests both read an account balance of 100 and both decide that a withdrawal
+of 80 is allowed. If each writes 20, the final balance looks plausible but the
+system has accepted 160 of withdrawals. A transaction, an atomic conditional
+update, or a serialized command can protect the rule.
+
+\begin{keyidea}
+Do not ask only whether each operation is correct in isolation. Ask which
+interleavings are possible, which state is shared, and which invariant must hold
+after every visible transition.
+\end{keyidea}
+
+\section{Memory and message boundaries}
+In one process, threads share memory and require synchronization. Across
+processes, machines, or organizations, messages cross a boundary and can be
+delayed, duplicated, reordered, or lost. A network timeout does not tell the
+caller whether the remote operation failed or succeeded but its response was
+lost. This is the source of many duplicate writes.
+
+A robust request path defines:
+
+\begin{itemize}
+  \item a deadline propagated through every downstream call;
+  \item a bounded retry policy only for operations that are safe to repeat;
+  \item an idempotency key or deduplication record for retried effects;
+  \item a clear failure result when the outcome is unknown;
+  \item telemetry that distinguishes timeout, refusal, overload, and validation.
+\end{itemize}
+
+Retries multiply load during failure. Exponential backoff with jitter spreads
+attempts, but it is not a cure for an overloaded dependency. A caller should
+retry only when the error is plausibly transient and the total deadline still
+allows useful work. A circuit breaker can stop calls to a failing dependency,
+but it introduces its own state machine and false-open trade-off.
+
+\section{Ordering and causality}
+Wall-clock timestamps are not a reliable global ordering in a distributed system.
+Clocks differ and can move. Lamport's work on logical clocks shows how a system
+can represent a partial order of events without pretending that every event has
+one exact global time \cite{lamport1978time}. In practice, choose the smallest
+ordering guarantee that the product needs: per-account sequence numbers,
+partition-local order, or an explicit version check.
+
+\section{Consistency is a product decision}
+An eventually consistent view can be correct for a feed whose purpose is
+discovery, but unacceptable for a bank balance or an authorization decision.
+“Strong” and “eventual” are not complete specifications. State what a reader may
+observe after a write, which conflicts can occur, and how a user can repair or
+understand them.
+
+The CAP theorem is frequently reduced to a slogan about choosing two of three
+properties. The more useful interpretation is narrower: under a network
+partition, a distributed data system cannot simultaneously provide a particular
+strong consistency guarantee and uninterrupted availability for every operation.
+The actual design space includes latency, scope of consistency, failure model,
+and recovery strategy \cite{brewer2012cap}.
+
+\section{Queues and workers}
+Queues decouple producers and consumers in time. They absorb bursts and allow a
+worker pool to process work at a controlled rate. They also create backlog,
+duplicate delivery, poison messages, and delayed user-visible state. A queue is
+not a free buffer; it is a new stateful subsystem.
+
+For a message handler, specify:
+
+\begin{enumerate}
+  \item what makes a message valid;
+  \item the acknowledgment point;
+  \item the effect of a crash before and after acknowledgment;
+  \item maximum attempts and dead-letter handling;
+  \item deduplication identity and retention;
+  \item how operators replay, quarantine, or delete a message safely.
+\end{enumerate}
+
+\section{A small state machine}
+Model a payment or order lifecycle as a state machine before implementing it:
+
+\begin{center}
+\begin{tikzpicture}[node distance=20mm,>=Latex]
+  \node[draw,rounded corners,fill=codebg,minimum width=25mm,minimum height=9mm] (new) {new};
+  \node[draw,rounded corners,fill=codebg,minimum width=25mm,minimum height=9mm,right=of new] (accepted) {accepted};
+  \node[draw,rounded corners,fill=codebg,minimum width=25mm,minimum height=9mm,right=of accepted] (paid) {paid};
+  \node[draw,rounded corners,fill=codebg,minimum width=25mm,minimum height=9mm,below=of accepted] (cancelled) {cancelled};
+  \draw[->,thick,accent] (new) -- node[above,font=\scriptsize]{validate} (accepted);
+  \draw[->,thick,accent] (accepted) -- node[above,font=\scriptsize]{capture} (paid);
+  \draw[->,thick,accent] (accepted) -- node[right,font=\scriptsize]{cancel} (cancelled);
+\end{tikzpicture}
+\end{center}
+
+The diagram makes illegal transitions visible. It also raises operational
+questions: what if capture succeeds but the response times out? The answer may
+be a reconciliation state rather than an optimistic retry.
+
+\begin{exercise}
+For a queue consumer that sends an email, list the states before and after a
+crash at each of these points: before send, after send, before acknowledgment,
+and after acknowledgment. Choose a deduplication strategy and state its limits.
+\end{exercise}
+
+\section{Chapter summary}
+Concurrency is reasoning about interleavings; distribution adds uncertain
+messages and partial failure. Define deadlines, retryability, idempotency,
+ordering, consistency, and recovery. Treat queues and state machines as explicit
+parts of the product rather than invisible implementation details.
+

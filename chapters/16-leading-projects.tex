@@ -1,0 +1,85 @@
+\chapter{Estimation, teams, incidents, and engineering management}
+
+\section{Estimation under uncertainty}
+An estimate is a prediction with assumptions, not a promise extracted from a
+person. Separate three quantities: effort, elapsed time, and confidence. A task
+may require two days of work but a week of elapsed time because it depends on an
+approval or a test environment.
+
+Use ranges when uncertainty is material. State the reference class, known work,
+unknowns, dependencies, and what would change the estimate. Decompose until a
+piece is small enough to observe progress, but do not confuse more detailed
+fiction with more accuracy.
+
+\section{Planning and sequencing}
+Sequence work by risk and learning, not only by apparent feature value. Resolve
+unknown integrations early. Build a vertical slice that exercises the real path
+from input to persistence and observation. This uncovers hidden work sooner than
+building isolated layers that cannot yet run.
+
+A useful plan has:
+
+\begin{itemize}
+  \item outcome and non-goals;
+  \item decision log and assumptions;
+  \item milestones that produce observable evidence;
+  \item dependencies and owners;
+  \item quality and operational exit criteria;
+  \item a change and rollback path.
+\end{itemize}
+
+\section{Team organization}
+Team structure changes communication paths and ownership. Conway's law is a
+useful observation about correspondence between communication structures and
+system design, but it is not a deterministic theorem. Align ownership with
+cohesive capabilities where possible. Make interfaces and escalation paths
+explicit when ownership must cross teams.
+
+Avoid “one person owns quality.” Every engineer affects quality, while specific
+roles may coordinate standards, testing, security, or operations. A team is
+responsible for the system it changes; a platform or specialist team should
+reduce friction, not become a queue for every decision.
+
+\section{Engineering management}
+Management is system design applied to people, information, incentives, and
+constraints. Good managers make priorities, decision rights, and trade-offs
+clear; protect focus; develop capability; and ensure that uncomfortable evidence
+can travel upward. Metrics should support learning rather than invite gaming.
+
+Useful signals include lead time, change failure rate, recovery time, defect
+escape, review wait, and user outcomes, but each can be misinterpreted. DORA-style
+delivery measures are indicators, not a scoreboard for comparing unlike teams.
+Combine quantitative signals with qualitative context.
+
+\section{Incidents and learning}
+The same skills used in operational incidents apply to project incidents:
+surface facts, assign a coordinator, stabilize, communicate, and record decisions.
+A missed migration, privacy concern, or repeated failed release deserves a causal
+review. A postmortem action should improve the system, workflow, or decision
+boundary; it should not merely ask people to remember harder.
+
+\section{Decision rights}
+For a recurring decision, name who recommends, who decides, who must be
+consulted, and who is informed. Centralize decisions that need consistency or
+rare expertise; delegate reversible local decisions. Ambiguous authority creates
+delay and makes risk invisible.
+
+\section{Healthy delivery pressure}
+Urgency is real, but speed without a definition of done is borrowing from the
+future. When a deadline forces a shortcut, record what is deferred, what risk it
+creates, and the condition for repayment. A safe temporary reduction in scope is
+usually easier to recover from than an invisible reduction in reliability or
+security.
+
+\begin{exercise}
+Create a one-page plan for a four-person team delivering a new order export.
+Include outcome, non-goals, risks, milestones, quality gates, owner boundaries,
+and a rollback plan. Include one decision that should be delegated and one that
+should be escalated.
+\end{exercise}
+
+\section{Chapter summary}
+Estimate with ranges and assumptions. Sequence for learning and risk reduction,
+align ownership with capabilities, use metrics as evidence rather than targets,
+and turn incidents and shortcuts into explicit system improvements.
+

@@ -1,0 +1,102 @@
+\chapter{APIs, data modelling, and persistence}
+
+\section{An interface is a promise over time}
+An \term{API} is more than a URL or method signature. It defines inputs, outputs,
+errors, identity, authorization, ordering, consistency, and compatibility. A
+client can depend on behaviour that was never written down, so an API should
+make its important promises deliberate.
+
+For an HTTP endpoint, document at least:
+
+\begin{itemize}
+  \item the resource and method semantics;
+  \item accepted representations and validation rules;
+  \item success and error status codes with stable error shapes;
+  \item authentication, authorization, rate limits, and sensitive fields;
+  \item retry and idempotency behaviour;
+  \item pagination, ordering, time zones, and version-compatibility rules.
+\end{itemize}
+
+HTTP is standardized as a stateless application-level protocol with shared
+semantics across versions; the standard does not dictate your business resource
+model \cite{ietf2022http}. This distinction matters. A `POST /orders` contract
+is yours, while the semantics of status codes and method properties are governed
+by the HTTP specification.
+
+\section{Identifiers and time}
+Identifiers should communicate less than they need to. An opaque identifier
+reduces accidental coupling to storage order and makes enumeration harder, but
+it does not replace authorization. If a client needs chronological ordering,
+provide an explicit timestamp or cursor rather than asking it to decode an ID.
+
+Time has at least three meanings: an instant in a global timeline, a local
+calendar representation, and a duration measured by a monotonic clock. Store
+instants in an unambiguous form, carry time-zone information when presenting
+calendar values, and use a monotonic clock for elapsed-time measurements. Never
+use wall-clock time to decide whether a timeout duration has elapsed.
+
+\section{Relational modelling}
+A relational schema is an executable set of invariants. In the example schema,
+positive quantities are checked in the database even though application code
+also validates them. Defence in depth is useful because imports, migrations,
+administrative scripts, and future services can bypass one validation path.
+
+The order total is stored as integer cents. Decimal money is a domain choice;
+the important point is that binary floating-point approximations are not silently
+used for a value whose legal meaning is exact. The database view recalculates the
+sum of line items. In a production design, decide whether the stored total is a
+snapshot, a cache, or an authoritative ledger value, and reconcile it explicitly.
+
+\begin{lstlisting}[language=SQL,caption={A constraint is part of the data contract.}]
+CREATE TABLE order_items (
+    order_id TEXT NOT NULL REFERENCES orders(id),
+    sku TEXT NOT NULL CHECK (length(trim(sku)) > 0),
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    unit_price_cents INTEGER NOT NULL CHECK (unit_price_cents > 0),
+    PRIMARY KEY (order_id, sku)
+);
+\end{lstlisting}
+
+\section{Transactions and consistency}
+A transaction groups changes so that the database presents an allowed state at
+its commit boundary. The exact isolation guarantees vary by database engine and
+configuration. Do not infer serializable behaviour from the word “transaction.”
+Ask what anomalies are possible: dirty reads, lost updates, write skew, or
+phantoms. Then choose a constraint, lock, isolation level, or retry strategy that
+matches the invariant.
+
+The outbox pattern is useful when a durable state change must cause a message.
+Write the domain change and an outbox row in the same local transaction. A
+separate publisher reads unclaimed outbox rows and sends them with at-least-once
+delivery. Consumers must therefore be idempotent. The pattern does not create
+exactly-once effects across arbitrary systems; it creates a recoverable handoff.
+
+\section{Schema evolution}
+A safe migration is compatible with the versions that may coexist during rollout.
+The expand-and-contract sequence is a common strategy:
+
+\begin{enumerate}
+  \item add a nullable or additive representation;
+  \item deploy code that can read both and writes the new form;
+  \item backfill and validate existing data;
+  \item switch readers and enforce the new invariant;
+  \item remove the old representation only after rollback is no longer needed.
+\end{enumerate}
+
+This costs temporary complexity. The alternative, a single destructive change,
+may be reasonable for a private database with a verified restore path and a
+maintenance window. The decision depends on data value, downtime tolerance,
+rollout topology, and rollback feasibility.
+
+\begin{exercise}
+Design an endpoint for retrieving a customer's orders. Specify pagination,
+ordering, authorization, deletion behaviour, and what happens when a client
+repeats a request after a timeout.
+\end{exercise}
+
+\section{Chapter summary}
+APIs are long-lived behavioural contracts. Model identity, time, errors, retries,
+and compatibility explicitly. Use database constraints as executable invariants,
+understand the actual transaction guarantees, and evolve schemas in a way that
+respects the versions present during deployment.
+

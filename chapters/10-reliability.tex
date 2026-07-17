@@ -1,0 +1,91 @@
+\chapter{Reliability, resilience, scalability, and capacity}
+
+\section{Define reliable for whom}
+Reliability is not “the server did not crash.” It is the probability that a
+system performs its required function for a stated user, time, and environment.
+An API can be available while returning stale or incorrect data; a batch job can
+be correct while missing its deadline. Define the service indicator before
+choosing a target.
+
+Useful indicators include successful request ratio, freshness, correctness rate,
+queue age, and latency percentiles. The percentile must include a population,
+window, and boundary. “p95 under 200 ms” is incomplete unless it says which
+requests, which route, whether retries are included, and where time starts and
+ends.
+
+\section{SLOs and error budgets}
+A service-level objective (SLO) is a target such as “99.9 percent of eligible
+requests in a rolling 30-day window succeed within the defined latency bound.”
+The remaining error budget is the permitted failure fraction. It is a decision
+tool: when the budget is healthy, a team may accept a risky improvement; when it
+is exhausted, stability work has priority. Google describes SLOs as a way to
+state and measure desired reliability \cite{google2016sre}.
+
+The arithmetic is simple. For a 30-day window, 99.9 percent availability allows
+about 43.2 minutes of unavailable time if the measurement is continuous. The
+number is not a promise: maintenance, exclusions, sampling, and user impact
+change the interpretation. State the measurement method.
+
+\section{Failure modes and resilience}
+Resilience is the ability to continue useful operation or recover after failure.
+List failure modes by layer:
+
+\begin{itemize}
+  \item input: malformed, oversized, duplicated, or adversarial;
+  \item process: crash, memory exhaustion, deadlock, resource leak;
+  \item dependency: timeout, partial response, incompatible version;
+  \item data: corruption, lag, missing migration, unrecoverable deletion;
+  \item human and organizational: bad release, unclear ownership, unavailable expert.
+\end{itemize}
+
+For each, choose a response: prevent, detect, degrade, retry, isolate, fail
+closed, fail open, or recover. “Fail gracefully” is not a response until the
+degraded behaviour is named.
+
+\section{Scalability and capacity}
+Scalability is how resource use and performance change as workload grows. It is
+not synonymous with speed. Capacity planning starts with a workload model:
+arrival rate, request mix, payload size, concurrency, data growth, and burst
+shape. Measure service time and a bottleneck resource. Little's Law gives a
+useful relationship for a stable queueing system:
+
+\[
+  L = \lambda W,
+\]
+
+where $L$ is average work in the system, $\lambda$ is average arrival rate, and
+$W$ is average time in the system. The relationship does not by itself predict
+tail latency or behaviour during overload, but it exposes inconsistent capacity
+claims.
+
+\section{Load, stress, and performance tests}
+A performance test is only meaningful with a stated workload, environment,
+warm-up, data shape, concurrency, and measurement. A benchmark that reports
+average latency may hide a failing tail. A stress test beyond capacity can reveal
+recovery behaviour, but it should not be run against a production dependency
+without explicit authorization and safeguards.
+
+Optimization should follow a measured bottleneck. Cache design changes
+correctness and invalidation; parallelism changes ordering and contention; a
+database index changes write cost and storage. Record the baseline, the change,
+and the new workload result.
+
+\section{Backups and recovery}
+A backup that has never been restored is an untested hope. Define recovery point
+objective (RPO) and recovery time objective (RTO), encrypt backups, control
+access, test restoration, and document dependencies such as keys and schema
+versions. A replication system can copy corruption or accidental deletion, so it
+is not a substitute for historical recovery points.
+
+\begin{exercise}
+Write an SLO for an order-creation endpoint, calculate its monthly error budget,
+and name three events that should consume it. Then specify an RPO and RTO for
+orders and justify them in terms of user and business impact.
+\end{exercise}
+
+\section{Chapter summary}
+Reliability starts with a defined user-visible indicator. Use SLOs to make trade-
+offs explicit, model failure modes, plan capacity from workload, test performance
+with reproducible conditions, and treat restoration as a capability that must be
+exercised.
+
